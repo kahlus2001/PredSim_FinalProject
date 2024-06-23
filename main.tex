@@ -1,0 +1,568 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage[toc,page]{appendix}
+\usepackage[left=1.2in, right=1.2in, top=1in, bottom=1in]{geometry}
+\usepackage{float}
+\usepackage[colorlinks=true, urlcolor=blue, linkcolor=red]{hyperref}
+
+\usepackage{setspace}
+\onehalfspacing
+
+
+\title{Analysis of the predictive power of interest rates for future economic growth - the case of Lithuania}
+\author{Mikolaj Kahl (50099) }
+\date{June 2024}
+
+\begin{document}
+
+\maketitle
+\newpage
+
+\section*{Disclaimer}
+
+The source code for this project and the associated data are available on GitHub. It is highly encouraged to run the Python notebook along with the report as the Python code output provides an even more comprehensive data analysis, supporting the report with additional figures, plots and tables. You can access the repository at the following link:
+
+\url{https://github.com/kahlus2001/PredSim_FinalProject}
+
+Some of the code has been inspired by the code written by prof. Olga Klinkowska, that was presented to the author of this paper as part of the course material for the ``Predictions and Simulations'' course, which is part of Master Big Data Science at Kozminski University, 2024.
+
+The author also acknowledges the use of ChatGPT and Grammarly tools for proofreading, correcting grammatical and logical errors in the report text and paraphrasing the author's words. The author declares that all ideas, observations and comments included in this study are of his own, or appropriately cited when originating from an external source.
+
+\newpage
+
+\section{Introduction}
+
+This project aims to analyze the predictive power of interest rates for future economic growth, specifically focusing on Lithuania. The project will evaluate whether the level of interest rates, GDp and several other economic indicators can predict future economic growth values in short-term and long-term horizons. 
+
+The Predictive abilities of interest rates have long been studied by academia. Early foundational work by Harvey (1988, 1989, 1991) demonstrated that the difference between long and short-term interest rates, known as the term spread, could forecast future recessions and related economic activity. These studies primarily focused on the United States and developed countries, describe a visible relationship between the term spread and the economic cycle.
+
+More recent research has explored the applicability of using interest rates as predictors of economic growth over time and across different economies and economic conditions, for instance, Hannikainen (2015, 2017). These studies suggested that the predictive power of interest rates might not be stable and could vary depending on the economic environment and the specific characteristics of the economy under study.
+
+This project aims to analyze the predictive power of interest rates for future economic growth in Lithuania. The analysis employs advanced econometric techniques, including ARMA and OLS modelling, to evaluate the predictive power of interest rates. The study aims to investigate several models predicting long-term and short-term economic growth in Lithuania, with the use of variables such as the term spread (the difference between nominal long-term and short-term rates), the real short-term rate (adjusted for inflation) and real gross domestic product (GDP).
+
+To ensure the robustness of the analysis, the study will compare the baseline predictive models with a set of alternative models, including nested models with only one exogenous regressor, an autoregressive model with no exogenous regressors, naive forecasts, and an eight-quarter moving average forecast. The evaluation will include both in-sample and out-of-sample analysis.
+
+
+\subsection{Related Academic Studies}
+
+The predictive power of interest rates on economic growth has been intensely studied by econometricians in the past. A study by Haubrich and Dombrosky (1996) titled "Predicting Real Growth Using the Yield Curve," discusses the yield curve's usefulness in predicting future economic activity and recessions. The yield curve, which plots bond yields against their maturities, is a widely watched financial indicator by IR products trades and institutional investors like pension funds and national banks. While the yield curve is typically upwards-sloping, its flattening or inversion has historically indicated economic downturns.
+
+Haubrich and Dombrosky's (1996) research builds on earlier work by Harvey (1989, 1991, 1993) and extends the analysis by including data up to the mid-1990s. They compare the yield curve's forecasting ability with naive models, traditional leading indicators, and professional forecasts. Utilizing out-of-sample forecasts, their study evaluates the yield curve's predictive power for both the probability of a recession and its severity. According to the study's results, the 10-year, three-month spread has been shown to have substantial predictive power for forecasting real growth, in the period 30 years before the study publication. It has been one of the best predictors of real growth four quarters into the future. However, in the decade prior to the study's publishing date, its effectiveness has been observed to decrease, making it one of the least accurate forecast techniques among the ones under investigation. This decline may be due to a changing relationship between the yield curve and real economic activity. The researchers conclude by stating that while not a replacement for professional forecasts, the yield curve still provides valuable information as a check on more complex models.
+
+
+Another study by Michael Dotsey (1998) titled ``The Predictive Content of the Interest Rate Term Spread for Future Economic Growth'' examines the predictive power of the yield curve for forecasting real economic activity, particularly real GDP growth and recessions. His article confirms that the yield spread is generally a good indicator for forecasting future GDP growth, although its effectiveness has been declining in recent years. The accuracy of GDP growth predictions using term spread, both in-sample and out-of-sample, has declined compared to earlier periods. However, its reduced predictive power in recent periods may be connected to either some wider economic shift or just a temporary change. Examining the out-of-sample forecast accuracy for one-year-ahead GDP growth using various models indicated that adding the yield spread did not significantly enhance forecast precision. Forecasts made over the entire period and the 1985 to 1997 period have shown only a slight improvement in RMSE when the spread is included. Adjusting the regression start date improved forecast accuracy slightly, but the gain remained statistically insignificant. Nonlinear models provided slightly better out-of-sample forecasts than the spread alone, but the improvement was minimal. 
+
+Specializing study scope on Lithuania, a thesis written by Pilström and  Pohl (2009), titled ``Forecasting GDP Growth - The case of the Baltic States'', aims to identify a general model for forecasting GDP growth in the Baltic States (Estonia, Latvia and Lithuania) using a vector autoregression (VAR) model. This model uses historical data on GDP, inflation and unemployment to predict future GDP growth. Their forecasts showed promising results, especially for short-term horizons up to eight quarters ahead. Forecasts for 2009 were in line with other established forecasts, although longer-term forecasts up to sixteen quarters showed increased uncertainty, especially during the financial crisis of 2008-2009.
+
+The empirical analysis showed that Lithuania's GDP was forecast to fall by 12.51\% in 2009 and to recover by 4.23\% in 2010. The study concluded that the VAR model provided reliable short-term GDP forecasts for the Baltic States and indicated its potential applicability to other countries with different economic profiles. The research concluded by exposing the challenges of forecasting in volatile and transition economies and highlighted the need for robust econometric models.
+
+The earlier studies discussed, have laid a solid foundation for understanding the predictive power of the yield curve for future economic growth. However, some of these studies are over two decades old, and it is essential to revisit and reassess their findings in the context of the current economy. In addition, this study focuses solely on Lithuania, which is not yet covered by scientific studies to the extent larger economies, like the US, are. By building on these foundational studies and incorporating advanced econometric techniques, this project will investigate the predictive power of interest rates for future economic growth, based on the case study of Lithuania.
+\newpage
+
+\section{Methodology}
+
+This section outlines the equations for the models included in the study, explains the choice of variables, and describes the evaluation criteria used for in-sample (IS) and out-of-sample (OOS) analysis.
+
+\subsection{Baseline Models}
+
+The main predictive regressions for short-term and long-term economic growth are defined by the equations below:
+
+\textbf{Short-term economic growth:}
+\begin{equation}
+    Y_{t+1} = \alpha + \sum_{i=0}^{p-1} \beta_i Y_{t-i} + \beta_{TS} TS_t + \beta_{SR} realSR_t + \beta_{realGDP} realGDP_t + \epsilon_{t+1}
+\end{equation}
+
+\textbf{Long-term economic growth:}
+\begin{equation}
+    Z_{t;t+4} = \alpha + \sum_{i=0}^{p-1} \beta_i Z_{t-i} + \beta_{TS} TS_t + \beta_{SR} realSR_t + \beta_{realGDP} realGDP_t + \epsilon_{t+4}
+\end{equation}
+
+
+where \( Y_{t+1} \) represents the short-term economic growth forecast for time \( t+1 \).
+    \( Z_{t;t+4} \) represents the long-term economic growth forecast for the period from \( t \) to \( t+4 \).
+     \( \alpha \) is the intercept term.
+     \( \beta_i \) are the coefficients for the lagged terms of the dependent variables.
+     \( \sum_{i=0}^{p-1} \beta_i Y_{t-i} \) represents the sum of the lagged terms of short-term economic growth.
+     \( \sum_{i=0}^{p-1} \beta_i Z_{t-i} \) represents the sum of the lagged terms of long-term economic growth.
+    \( \beta_{TS} \) is the coefficient for the term spread \( TS_t \).
+    \( \beta_{SR} \) is the coefficient for the short-term real interest rate \( realSR_t \).
+     \( \beta_{realGDP} \) is the coefficient for the real GDP \( realGDP_t \).
+    \( \epsilon_{t+1} \) and \( \epsilon_{t+4} \) are the error terms for the short-term and long-term models, respectively.
+
+    
+These two models serve as baseline models for this study. All other models will be compared to the two baseline models.
+
+\subsection{Alternative Models}
+
+Several alternative models have been developed in order to evaluate the performance of various modelling techniques. This study aims to investigate:
+
+\begin{enumerate}
+    \item Three nested models with only one exogenous regressor each (only realSR, only TS, or only GDP)
+    \item One autoregressive model with the optimal number of lags and no exogenous regressors (AR model)
+    \item A naive forecasts
+    \item One eight-quarter moving average forecast model
+\end{enumerate}
+
+\subsection{Choice of Variables and Economic Intuition}
+
+\begin{itemize}
+    \item \textbf{Term Spread (TS):} The term spread, defined as the difference between long-term and short-term interest rates. An upward-sloping yield curve (positive term spread) typically indicates economic growth, while an inverted yield curve (negative term spread) often precedes recessions.
+    
+    \item \textbf{Short-term Real Interest Rate (realSR):} The short-term real interest rate influences the cost of borrowing, thus also the ease of borrowing, which might influence borrowing decisions. Lower real short-term rates make borrowing cheaper, encouraging investment and consumption, and leading to economic growth. On the other hand, higher real short-term rates can reduce borrowing and consumption, greatly reducing economic activity.
+    
+    \item \textbf{Real GDP (realGDP):} Has been chosen as the additional variable of choice. Including real GDP as an exogenous variable accounts for the current state of economic activity, which can provide additional predictive power. Real GDP captures the aggregate output and income in the economy, making it an important indicator of economic health, as economic growth is positively correlated to GDP growth.
+    
+\end{itemize}
+
+\subsection{Evaluation Criteria}
+
+In order to evaluate the performance of the models, for both in-sample (IS) and out-of-sample (OOS) analyses, the following metrics are used:
+
+\begin{itemize}
+    \item \textbf{Mean Squared Error (MSE):} Measures the average of the squares of the errors, providing a sense of the average magnitude of the errors.
+    \item \textbf{Mean Absolute Error (MAE):} Measures the average magnitude of the errors in a set of predictions, without considering their direction.
+    \item \textbf{Root Mean Squared Error (RMSE):} The square root of the MSE, which provides an indication of the average magnitude of the error.
+\end{itemize}
+
+\newpage
+
+\section{Data}
+
+This section describes the dataset used in the analysis, including the source of the data, the variables included, the time span of the sample, and the transformations applied. The primary data sources are the OECD and Eurostat databases.
+
+Data was collected for various time periods, with some variables available on a monthly basis and others on a quarterly basis. To ensure consistency, all data was transformed into quarterly frequency. Only quarters where data was available for all variables were retained, resulting in a final dataset of 88 rows (quarters) of raw and derived non-null quantities from Q2 2001 to Q1 2023.
+
+\subsection{Raw Data}
+
+The dataset includes the following raw variables:
+
+\begin{itemize}
+    \item Consumer Price Index (CPI): A measure that examines the weighted average of prices of a basket of consumer goods and services. (Source: OECD (2024), Inflation (CPI) (indicator). doi: 10.1787/eee82e6e-en, Accessed on 10 June 2024)
+    \item Short-term interest rate (str): The interest rate on short-term borrowing. (Source: OECD (2024), Short-term interest rates (indicator). doi: 10.1787/2cc37d77-en, Accessed on 10 June 2024)
+    \item Long-term interest rate (ltr): The interest rate on long-term borrowing. (Source: OECD (2024), Long-term interest rates (indicator). doi: 10.1787/662d712c-en, Accessed on 10 June 2024)
+    \item Gross Domestic Product (GDP): The total value of goods produced and services provided in Lithuania during one year. (Source: OECD (2024), Quarterly GDP (indicator). doi: 10.1787/b86d1fc8-en, Accessed on 17 June 2024)
+\end{itemize}
+
+Summary Statistics were computed for all four raw variables, see table below:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lcccc}
+        \hline
+        & \textbf{cpi} & \textbf{ltr} & \textbf{str} & \textbf{gdp} \\
+        \hline
+        \textbf{count} & 88.000000 & 88.000000 & 88.000000 & 8.800000e+01 \\
+        \textbf{mean} & 94.903641 & 3.671352 & 1.875061 & 3.469150e+10 \\
+        \textbf{std} & 18.949942 & 3.225633 & 2.327416 & 1.403695e+10 \\
+        \textbf{min} & 68.990733 & 0.160000 & -0.566377 & 1.410647e+10 \\
+        \textbf{25\%} & 75.909342 & 0.310000 & -0.302637 & 2.538522e+10 \\
+        \textbf{50\%} & 98.821550 & 3.859333 & 1.483030 & 3.316023e+10 \\
+        \textbf{75\%} & 105.178742 & 5.150000 & 2.999344 & 4.295819e+10 \\
+        \textbf{max} & 151.858500 & 14.500000 & 8.021772 & 7.095118e+10 \\
+        \hline
+    \end{tabular}
+    \caption{Summary statistics for raw data}
+    \label{tab:summary_statistics}
+\end{table}
+
+
+To get a better insight into the raw data at hand, the following time series plots have been produced:
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{gdp.png}
+        \caption{GDP}
+        \label{fig:gdp}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{ltr.png}
+        \caption{Long Term Interest Rate}
+        \label{fig:ltr}
+    \end{minipage}
+    \vfill
+    \begin{minipage}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{str.png}
+        \caption{Short Term Interest Rate}
+        \label{fig:str}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{cpi.png}
+        \caption{Consumer Price Index (CPI)}
+        \label{fig:subfig4}
+    \end{minipage}
+    \caption{Time series plots of raw variables}
+    \label{fig:mainfigure}
+\end{figure}
+
+The GDP plot shows a steady upward trend from 2001 to 2023, indicating consistent economic growth in Lithuania over the period. Notably, there is a sharp increase in GDP around 2010 and a continued rise towards 2023, suggesting significant economic expansion.
+
+The long-term interest rate plot shows visible volatility, particularly around the 2008-2009 financial crisis, where rates spiked sharply. After the crisis, the rates declined steadily and remained low. In recent years (2023-2024) a rapid spike in rates has been observed.
+
+The short-term interest rate plot also shows significant fluctuations, especially during the 2008-2009 financial crisis when rates spiked. Following the crisis, the rates dropped dramatically and stayed low, followed by a spike in interest rates again in 2023. The short-term rate curve has a similar shape to the long-term one.
+
+The CPI plot indicates a steady increase in consumer prices from 2001 to 2023, reflecting rising inflation over the period. The acceleration in CPI growth is particularly noticeable after 2010, suggesting increasing price levels and potential inflationary pressures in the economy.
+
+\subsection{Derived Quantities}
+Having the raw variables, several derived economic quantities were computed, including real GDP, short-term and long-term economic growth rates, real short-term and long-term interest rates, and the term spread. 
+
+\begin{itemize}
+    \item Inflation rate ($\pi_t$): Calculated as the annualized rate of change in CPI.
+    \item Real short-term rate (real\_SR): The short-term interest rate adjusted for inflation.
+    \item Term spread (TS): The difference between the nominal long-term and short-term rates.
+    \item Real GDP (real\_gdp): The GDP adjusted for inflation.
+    \item Short-term economic growth (st\_growth): The annualized percentage growth in real GDP over the next quarter.
+    \item Long-term economic growth (lt\_growth): The annualized percentage growth in real GDP over the next four quarters.
+\end{itemize}
+
+\begin{itemize}
+    \item Real GDP:
+    \begin{equation}
+    \text{realGDP}_t = \frac{\text{GDP}_t}{\left(\frac{\text{CPI}_t}{\text{CPI}_{\text{base}}}\right)}
+    \end{equation}
+    where CPI\(_{\text{base}}\) is the Consumer Price Index for the base quarter.
+
+    \item Short-term economic growth (\(Y_{t+1}\)):
+    \begin{equation}
+    Y_{t+1} = 400 \times \ln\left(\frac{\text{realGDP}_{t+1}}{\text{realGDP}_t}\right)
+    \end{equation}
+
+    \item Long-term economic growth (\(Z_{t;t+4}\)):
+    \begin{equation}
+    Z_{t;t+4} = 100 \times \ln\left(\frac{\text{realGDP}_{t+4}}{\text{realGDP}_t}\right)
+    \end{equation}
+
+    \item Term spread (TS):
+    \begin{equation}
+    \text{TS}_t = \text{LTR}_t - \text{STR}_t
+    \end{equation}
+
+    \item Real short-term rate (realSR):
+    \begin{equation}
+    \text{realSR}_t = \left(\frac{1 + \text{STR}_t}{1 + \pi_t}\right) - 1
+    \end{equation}
+    where \(\pi_t\) is the annualized inflation rate for quarter \(t\), defined as:
+    \begin{equation}
+    \pi_t = \left(\frac{\text{CPI}_t - \text{CPI}_{t-1}}{\text{CPI}_{t-1}}\right) \times 4
+    \end{equation}
+\end{itemize}
+
+
+\subsection{Transformations}
+
+To ensure stationarity in the data, various transformations were applied to variables needed for the model, guided by the Augmented Dickey-Fuller (ADF) test results at a 5\% confidence interval. The term spread (TS) and the real short-term rate (real\_SR) were both differenced, as their first differences (d\_TS and d\_real\_SR) were found to be stationary. The short-term economic growth rate (st\_growth) was used in its original form since it already exhibited stationarity. For long-term economic growth (lt\_growth), the first difference (d\_lt\_g) was calculated to achieve stationarity.
+These transformations were essential to meet the assumptions required by the ARMA model.
+
+The following summary statistics can be observed for the transformed variables:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lcccc}
+        \hline
+        & \text{d\_TS} & \text{d\_real\_SR} & \text{st\_g} & \text{d\_lt\_g} \\
+        \hline
+        \text{count} & 87.000000 & 87.000000 & 87.000000 & 87.000000 \\
+        \text{mean} & -0.021479 & -0.041653 & 3.916989 & -0.049628 \\
+        \text{std} & 0.911163 & 0.636000 & 10.811438 & 3.776400 \\
+        \text{min} & -2.771625 & -3.309418 & -62.954291 & -16.636493 \\
+        \text{25\%} & -0.291903 & -0.167603 & 1.269150 & -1.304187 \\
+        \text{50\%} & -0.011974 & -0.026036 & 4.745078 & -0.212919 \\
+        \text{75\%} & 0.073178 & 0.122084 & 8.750791 & 1.343133 \\
+        \text{max} & 7.165042 & 2.188552 & 23.289813 & 19.835918 \\
+        \hline
+    \end{tabular}
+    \caption{Summary statistics for transformed model variables}
+    \label{tab:summary_statistics_derived}
+\end{table}
+
+Time series plots of the transformed variables were also plotted:
+
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{d_lt_g.png}
+        \caption{First Difference of Long-term Growth}
+        \label{fig:d_lt_g}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{d_ST.png}
+        \caption{First Difference of Term Spread}
+        \label{fig:d_TS}
+    \end{minipage}
+    \vfill
+    \begin{minipage}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{d_real_SR.png}
+        \caption{First Difference of Short-Term Interest Rate}
+        \label{fig:d_SR}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{st_g.png}
+        \caption{Real Short-Term Growth}
+        \label{fig:st_g}
+    \end{minipage}
+    \caption{Time series plots of transformed model variables}
+    \label{fig:mainfigure}
+\end{figure}
+
+The four graphs illustrate the dynamics and stationarity of key economic variables: long-term growth, term spread, real short-term interest rate, and real short-term growth. Figure 6, showing the first difference of long-term growth (\(d\_lt\_g\)), fluctuates around zero with notable spikes during the 2008-2009 financial crisis and around 2015, reflecting economic instability and recovery. Figure 7, showing the first difference of the term spread (\(d\_TS\)), reveals significant fluctuations, especially during the financial crisis, indicating shifts in market expectations and investor sentiment. Figure 8, presenting the first difference of the real short-term interest rate (\(d\_real\_SR\)), shows volatility around the 2008-2009 period and other fluctuations, reflecting changes in monetary policy responses to economic conditions. Figure 9, illustrating real short-term growth (\(st\_g\)), exhibits substantial volatility, particularly during the financial crisis, indicating the responsiveness of short-term economic performance to shocks and policy changes. All graphs present mean-reverting behaviour and fluctuations around a constant mean, suggesting the series are stationary.
+
+\subsection{Model Preparation}
+
+In this analysis, several models were defined to forecast short-term and long-term growth. The two baseline models are Ordinary Least Squares (OLS) models incorporating autoregressive terms. Based on the Augmented Dickey-Fuller (ADF) and Partial Autocorrelation Function (PACF) analysis, three lags were selected for the short-term growth model, whereas only one lag was chosen for the long-term growth model. The autoregressive terms were accompanied by three exogenous variables, real GDP, the term spread and real short-term rates.
+
+For each of the baseline models, a number of alternative models were defined:
+
+\begin{itemize}
+    \item AR model with only the autoregressive terms of the chosen number of lags as for the baseline model
+    \item three nested models that contained the AR model and one of three exogenous variables (Term Spread, real Short-term interest rate, real GDP)
+    \item a naive prediction - a straightforward one-period shift, i.e. the value of $y_t$  as the direct prediction for $y_{t+1}$.
+    \item an 8 quarter moving average prediction
+\end{itemize}
+
+In total, 7 models for each of the two quantities under investigation (long-term and short-term economic growth) were created, giving a total of 14 different time-series forecasting models.
+
+\newpage 
+
+\section{Study Results}
+
+For all of the models, a detailed in-sample and out-of-sample analysis was performed, and the models were compared. Separate comparisons were conducted for short-term and long-term growth models.
+
+
+\subsection{In-Sample Predictions}
+
+For short-term growth, various IS forecast evaluation metrics can be seen in the table below:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcccc}
+\hline
+Model & MSE & RMSE & MAE & MAPE \\
+\hline
+Baseline & 81.494206 & 9.027414 & 6.073351 & 18.549271 \\
+AR(3) & 95.548546 & 9.774894 & 5.965948 & 26.257733 \\
+AR(3) + TS & 93.173291 & 9.652631 & 6.029796 & 28.734815 \\
+AR(3) + rGDP & 95.492523 & 9.772028 & 5.948544 & 25.269149 \\
+AR(3) + rSR & 83.629474 & 9.144915 & 5.874555 & 18.633401 \\
+Naive & 158.268131 & 12.580466 & 8.682880 & 47.859152 \\
+MA8 & 106.495057 & 10.319644 & 6.212161 & 36.698801 \\
+\hline
+\end{tabular}
+\caption{Comparison of Important Metrics for Each Model of Short-term Growth}
+\label{tab:model_comparison_lt}
+\end{table}
+
+The Baseline model demonstrates relatively low MSE (81.494206) and RMSE (9.027414) values, indicating reasonable accuracy in predicting short-term growth. The MAE (6.073351) and MAPE (18.549271) values suggest moderate absolute prediction errors. Comparatively, the AR(3) model shows slightly higher MSE (95.548546) and RMSE (9.774894) values, indicating a decrease in prediction accuracy, although its MAE (5.965948) is only slightly better than the Baseline model. The AR(3) + TS model's MSE (93.173291) and RMSE (9.652631) values are lower than the AR(3) model but higher than the Baseline model.
+
+The AR(3) + rGDP model exhibits high MSE (95.492523) and RMSE (9.772028) values, similar to the AR(3) model. Although the MAE (5.948544) is slightly better, the MAPE (25.269149) remains high. Conversely, the AR(3) + rSR model has lower MSE (83.629474) and RMSE (9.144915) values compared to other AR models, performing similarly to the Baseline model. Its MAE (5.874555) and MAPE (18.633401) values suggest better consistency in predictions. The Naive model, with the highest MSE (158.268131) and RMSE (12.580466) values, reflects poor prediction accuracy, and its MAE (8.682880) and MAPE (47.859152) values indicate less reliability. Lastly, the MA8 model, showing high MSE (106.495057) and RMSE (10.319644) values, indicates lower prediction accuracy compared to the Baseline and AR(3) + rSR models. Its MAE (6.212161) is moderate, but the high MAPE (36.698801) reflects inconsistencies in percentage error terms.
+
+For long-term growth, the IS various forecast evaluation metrics can be seen in the table below:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcccc}
+\hline
+Model & MSE & RMSE & MAE & MAPE \\
+\hline
+Baseline & 6.424274 & 2.534615 & 1.487735 & 6.451892 \\
+AR(1) & 13.317214 & 3.649276 & 2.188883 & 2.479971 \\
+AR(1) + TS & 10.449899 & 3.232630 & 2.042391 & 4.730376 \\
+AR(1) + rGDP & 6.448883 & 2.539465 & 1.511991 & 6.451125 \\
+AR(1) + rSR & 13.190907 & 3.631929 & 2.167943 & 2.316611 \\
+Naive & 21.178965 & 4.602061 & 3.014436 & 6.996535 \\
+MA8 & 15.216894 & 3.900884 & 2.411565 & 1.792416 \\
+\hline
+\end{tabular}
+\caption{Comparison of Important Metrics for Each Model of Long-term Growth}
+\label{tab:model_comparison_lt}
+\end{table}
+
+The Baseline model shows low MSE (6.424274) and RMSE (2.534615) values, indicating high accuracy in predicting long-term growth. The MAE (1.487735) and MAPE (6.451892) values suggest a minimal absolute prediction error and a reasonable percentage error, making the Baseline model a robust predictor. The AR(1) model, however, exhibits higher MSE (13.317214) and RMSE (3.649276) values, signifying a decrease in prediction accuracy.
+
+The AR(1) + TS model presents moderate MSE (10.449899) and RMSE (3.232630) values, which are lower than the AR(1) model but still higher than the Baseline model. Its MAE (2.042391) and MAPE (4.730376) values suggest better prediction accuracy than the AR(1) model but less than the Baseline. The AR(1) + rGDP model, with an MSE (6.448883) and RMSE (2.539465) similar to the Baseline model, demonstrates high prediction accuracy. Its MAE (1.511991) and MAPE (6.451125) values are also close to those of the Baseline, indicating strong reliability. Conversely, the AR(1) + rSR model shows higher MSE (13.190907) and RMSE (3.631929) values, reflecting decreased accuracy. Its MAE (2.167943) and MAPE (2.316611) values also indicate increased prediction errors compared to the Baseline and AR(1) + rGDP models.
+
+The Naive model, with the highest MSE (21.178965) and RMSE (4.602061) values, shows poor prediction accuracy. Its MAE (3.014436) and MAPE (6.996535) values further highlight its unreliability. Finally, the MA8 model, with moderate MSE (15.216894) and RMSE (3.900884) values, indicates lower prediction accuracy than the Baseline and AR(1) + rGDP models but better than the Naive model. Its MAE (2.411565) is moderate, while its MAPE (1.792416) suggests a significant percentage error. In conclusion, the Baseline and AR(1) + rGDP models exhibit the highest prediction accuracy and reliability for long-term growth, while the Naive model shows the poorest performance.
+
+\subsection{Out-of-sample Predictions}
+
+The OOS predictions were carried out from 2004-01-01, to ensure data availability for all models. 
+
+For short-term growth, various OOS forecast evaluation metrics can be seen in the table below:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcccc}
+\hline
+Model & MSE & RMSE & MAE & MAPE \\
+\hline
+Baseline & 446.134992 & 21.121908 & 12.454611 & 46.330302 \\
+AR(3) & 313.078230 & 17.694017 & 9.309375 & 30.084663 \\
+AR(3) + TS & 330.142813 & 18.169832 & 10.174535 & 43.879994 \\
+AR(3) + rGDP & 273.119131 & 16.526316 & 9.842522 & 30.615063 \\
+AR(3) + rSR & 303.885695 & 17.432318 & 9.435831 & 33.685793 \\
+Naive & 205.345975 & 14.329898 & 9.690506 & 43.058673 \\
+MA8 & 83.352252 & 9.129745 & 7.334370 & 32.594780 \\
+\hline
+\end{tabular}
+\caption{Comparison of Important Metrics for Each Model of Short-term Growth}
+\label{tab:model_comparison_lt}
+\end{table}
+
+The Baseline model shows the highest MSE (446.134992) and RMSE (21.121908) values, indicating lower accuracy in predicting short-term growth compared to other models. Its MAE (12.454611) and MAPE (46.330302) values also suggest higher absolute and percentage prediction errors, making it less reliable for out-of-sample predictions.
+
+The AR(3) model demonstrates better performance with lower MSE (313.078230) and RMSE (17.694017) values, reflecting improved accuracy. Its MAE (9.309375) and MAPE (30.084663) values indicate a significant reduction in prediction errors compared to the Baseline model. The AR(3) + TS model shows moderate performance with MSE (330.142813) and RMSE (18.169832) values, slightly higher than the AR(3) model but still much better than the Baseline model.
+
+The AR(3) + rGDP model exhibits the lowest MSE (273.119131) and RMSE (16.526316) values among the AR models, indicating the highest accuracy. Its MAE (9.842522) and MAPE (30.615063) values also demonstrate significant improvement over the Baseline model. The AR(3) + rSR model, with MSE (303.885695) and RMSE (17.432318) values, shows good accuracy but slightly higher prediction errors (MAE of 9.435831 and MAPE of 33.685793) compared to the AR(3) + rGDP model.
+
+The Naive model shows moderate performance with MSE (205.345975) and RMSE (14.329898) values, reflecting better accuracy than the Baseline model but with higher prediction errors (MAE of 9.690506 and MAPE of 43.058673). Finally, the MA8 model demonstrates the best performance with the lowest MSE (83.352252) and RMSE (9.129745) values, indicating the highest accuracy for short-term growth predictions. Its MAE (7.334370) and MAPE (32.594780) values further confirm its reliability, making it the most accurate model in this comparison.
+
+
+For long-term growth, various OOS forecast evaluation metrics can be seen in the table below:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcccc}
+\hline
+Model & MSE & RMSE & MAE & MAPE \\
+\hline
+Baseline & 24.088822 & 4.908036 & 2.417257 & 7.734830 \\
+AR(1) & 38.173090 & 6.178438 & 2.916849 & 5.908152 \\
+AR(1) + TS & 9.213908 & 3.035442 & 1.831919 & 7.786987 \\
+AR(1) + rGDP & 18.741230 & 4.329114 & 2.528317 & 2.970889 \\
+AR(1) + rSR & 15.968130 & 3.996014 & 2.442779 & 3.147250 \\
+Naive & 21.178965 & 4.602061 & 3.014436 & 6.996535 \\
+MA8 & 15.216894 & 3.900884 & 2.411565 & 1.792416 \\
+\hline
+\end{tabular}
+\caption{Comparison of Important Metrics for Each Model of Long-term Growth}
+\label{tab:model_comparison_lt}
+\end{table}
+
+The Baseline model exhibits a moderate level of accuracy with an MSE of 24.088822 and RMSE of 4.908036. However, its MAE (2.417257) and MAPE (7.734830) indicate relatively higher prediction errors in terms of absolute and percentage errors.
+
+The AR(1) model shows higher MSE (38.173090) and RMSE (6.178438) values compared to the Baseline model, reflecting lower accuracy. Its MAE (2.916849) and MAPE (5.908152) suggest that while the absolute error is higher, the percentage error is slightly better.
+
+The AR(1) + TS model performs significantly better with the lowest MSE (9.213908) and RMSE (3.035442) values among all models, indicating the highest accuracy. Its MAE (1.831919) is the lowest, although the MAPE (7.786987) is similar to the Baseline model, indicating high accuracy in terms of absolute errors but less improvement in percentage errors.
+
+The AR(1) + rGDP model shows moderate performance with an MSE of 18.741230 and RMSE of 4.329114, suggesting reasonable accuracy. Its MAE (2.528317) is slightly higher than the Baseline model, but the MAPE (2.970889) indicates a substantial decrease in percentage prediction errors.
+
+The AR(1) + rSR model also demonstrates good performance with an MSE of 15.968130 and RMSE of 3.996014. The MAE (2.442779) is comparable to the Baseline model, and the MAPE (3.147250) shows a significant decrease in percentage prediction errors, indicating better reliability.
+
+The Naive model exhibits higher MSE (21.178965) and RMSE (4.602061) values, reflecting moderate accuracy. However, its MAE (3.014436) and MAPE (6.996535) suggest higher absolute and percentage errors compared to the Baseline model.
+
+The MA8 model performs well with an MSE of 15.216894 and RMSE of 3.900884. Its MAE (2.411565) is comparable to the Baseline model, but the MAPE (1.792416) indicates the lowest percentage of prediction errors among all models.
+
+
+\section{Testing Statistical Significance of Model Predictions}
+
+In order to evaluate the predictive accuracy of various models, Diebold-Mariano (DM) and Diebold-Mariano with Harvey, Leybourne, and Newbold (DM-HLN) tests were conducted. These tests compare the forecast errors of different models to determine if there are statistically significant differences in their predictive performance. Additionally, the Unconditional and Conditional Giacomini-White (EPA) tests were also conducted, to further assess the accuracy of these forecasts.
+
+The two baseline models were compared to their alternative AR-based models to evaluate their predictive accuracy. Unfortunately, due to some technical difficulties with the study code, the naive model and moving average model were not compared to the baseline model, and thus ignored for this part of the study.
+
+For the short-term growth models, a summary of the tests can be seen in the table below:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lccccccc}
+\hline
+ & AR(3) + TS & AR(3) + real GDP & AR(3) + real SR & AR(3) \\
+\hline
+DM Stat & 1.0655 & 1.1454 & 1.0412 & 1.1768 \\
+DM p-value & 0.2866 & 0.2520 & 0.2978 & 0.2393 \\
+DM-HLN Stat & 1.0586 & 1.1379 & 1.0344 & 1.1691 \\
+DM-HLN p-value & 0.2931 & 0.2587 & 0.3042 & 0.2460 \\
+Unconditional EPA Stat & 1.1189 & 1.2899 & 1.0690 & 1.3603 \\
+Unconditional EPA Crit Val & 3.8415 & 3.8415 & 3.8415 & 3.8415 \\
+Conditional EPA Stat & 1.1369 & 1.3544 & 1.0809 & 1.4835 \\
+Conditional EPA Crit Val & 5.9915 & 5.9915 & 5.9915 & 5.9915 \\
+\hline
+\end{tabular}
+\caption{Results of DM and DM-HLN tests for short-term growth models}
+\label{tab:dm_test_short_term_transposed}
+\end{table}
+
+
+
+The results of the DM and DM-HLN tests for short-term growth models, summarized in the table, show that none of the alternative models significantly outperform the baseline model. The DM and DM-HLN p-values are all above 0.05, indicating the failure to reject the null hypothesis signifying equal predictive accuracy. Specifically, DM p-values range from 0.2393 to 0.2978, and DM-HLN p-values range from 0.2460 to 0.3042.
+
+Similarly, the EPA test statistics, both unconditional and conditional, do not exceed their critical values. The unconditional EPA statistics range from 1.0690 to 1.3603, and the conditional EPA statistics range from 1.0809 to 1.4835. This indicates no significant evidence that the alternative models offer better forecasting performance than the baseline model.
+
+For the long-term growth models, a summary of the tests can be seen in the table below: 
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lccccccc}
+\hline
+ & AR(1) + TS & AR(1) + real GDP & AR(1) + real SR & AR(1) \\
+\hline
+DM Stat & -1.0950 & 1.2459 & 0.8169 & 1.0425 \\
+DM p-value & 0.2735 & 0.2128 & 0.4140 & 0.2972 \\
+DM-HLN Stat & -1.0879 & 1.2378 & 0.8116 & 1.0357 \\
+DM-HLN p-value & 0.2801 & 0.2196 & 0.4196 & 0.3036 \\
+Unconditional EPA Stat & 1.1807 & 1.5215 & 0.6616 & 1.0717 \\
+Unconditional EPA Crit Val & 3.8415 & 3.8415 & 3.8415 & 3.8415 \\
+Conditional EPA Stat & 2.4637 & 3.2250 & 1.6059 & 2.3944 \\
+Conditional EPA Crit Val & 5.9915 & 5.9915 & 5.9915 & 5.9915 \\
+\hline
+\end{tabular}
+\caption{Results of DM and DM-HLN tests for long-term growth models}
+\label{tab:dm_test_long_term_transposed}
+\end{table}
+
+
+The results of the DM and DM-HLN tests for long-term growth models, presented in the table, indicate that none of the alternative models significantly outperform the baseline model. The DM and DM-HLN p-values are all above 0.05, meaning the null hypothesis of equal predictive accuracy cannot be rejected. Specifically, DM p-values range from 0.2128 to 0.4140, and DM-HLN p-values range from 0.2196 to 0.4196.
+
+Similarly, the EPA test statistics, both unconditional and conditional, do not surpass their critical values. The unconditional EPA statistics range from 0.6616 to 1.5215, and the conditional EPA statistics range from 1.6059 to 3.2250. This suggests no significant evidence that the alternative models provide better forecasting performance than the baseline model.
+
+\newpage
+
+\section{Conclusion}
+
+This study investigated the predictive power of interest rates, specifically the term spread, real GDP and real short-term rate, for future economic growth in Lithuania. Using time-series forecasting techniques, the study aimed to determine the accuracy and reliability of these interest rate variables in forecasting both short-term and long-term economic growth.
+
+For short-term growth, the in-sample (IS) analysis revealed that the Baseline model and the AR(3) + rSR model demonstrated the lowest error metrics, indicating higher prediction accuracy and reliability, compared to other models. The Naive and MA8 models showed the poorest performance with significantly higher error metrics. The out-of-sample (OOS) analysis showed that the MA8 model performed the best, followed by the AR(3) + rGDP model, indicating that these models were more accurate in predicting short-term growth outside the sample data.
+
+For long-term growth, the IS analysis highlighted that the Baseline and AR(1) + rGDP models had the lowest error metrics, demonstrating superior prediction accuracy and reliability. The Naive model again showed the poorest performance with the highest error metrics. The OOS analysis indicated that the AR(1) + TS model performed best, followed by the MA8 model, showing that these models were more reliable for long-term growth predictions.
+
+The Diebold-Mariano and Diebold-Mariano with Harvey, Leybourne, and Newbold tests were conducted to statistically compare the predictive accuracy of the alternative models against the baseline models. For short-term growth, the results indicated no significant evidence that the alternative models significantly outperformed the baseline model, as all DM and DM-HLN p-values were above 0.05. Similarly, the Giacomini-White (EPA) tests showed no significant improvement in forecasting performance by the alternative models.
+
+For long-term growth, the DM and DM-HLN tests also indicated that none of the alternative models significantly outperformed the baseline model. The EPA tests further supported these findings, showing no significant evidence that the alternative models provided better forecasting performance than the baseline model.
+
+In conclusion, while incorporating interest rate variables such as the term spread and real short-term rate into AR models showed some improvements in certain contexts, the baseline models generally provided the best and the most reliable forecasts for both short-term and long-term economic growth. Future research could explore the use of other economic indicators and more advanced modelling techniques, to improve economic growth forecasting.
+
+\newpage
+
+\begin{thebibliography}{99}
+    \bibitem{harvey1988} Harvey, C. R. (1988). The real term structure and consumption growth. \textit{Journal of Financial Economics, 22}(2), 305-333.
+    \bibitem{hannikainen2017} Hannikainen, J. (2017). When does the yield curve contain predictive power? Evidence from a data-rich environment. \textit{International Journal of Forecasting, 33}, 1044-1064.
+    \bibitem{hannikainen2015} Hannikainen, J. (2015). Zero lower bound, unconventional monetary policy and indicator properties of interest rate spreads. \textit{Review of Financial Economics, 26}, 46-54.
+    \bibitem{harvey1989} Harvey, C. R. (1989). Forecasts of economic growth from the bond and stock markets. \textit{Financial Analysts Journal, 45}(5), 38-45.
+    \bibitem{harvey1991} Harvey, C. R. (1991). The term structure and world economic growth. \textit{The Journal of Fixed Income, 1}(1), 7-19.
+    \bibitem{Haubrich1996Predicting} Haubrich, J. G., & Dombrosky, A. M. (1996). Predicting real growth using the yield curve. \textit{Federal Reserve Bank of Cleveland Economic Review, 32}(1), 26-35. Retrieved from https://core.ac.uk/download/pdf/6229957.pdf
+    \bibitem{dotsey1998} Dotsey, M. (1998). The predictive content of the interest rate term spread for future economic growth. \textit{Federal Reserve Bank of Richmond Economic Quarterly, 84}(3), 31-51.
+    \bibitem{PilströmPohl2009} Pilström, P., & Pohl, S. (2009). Prognostisera BNP tillväxt – En studie om de Baltiska Staterna. (Bachelor thesis). Jönköping International Business School, Jönköping University. Supervised by D. Wiberg, A. Högberg, & M. Lidbom.
+    \bibitem{OECD_CPI_2024}
+    OECD. (2024). Inflation (CPI) (indicator). doi: 10.1787/eee82e6e-en. Accessed on 10 June 2024.
+    \bibitem{OECD_LTR_2024}
+    OECD. (2024). Long-term interest rates (indicator). doi: 10.1787/662d712c-en. Accessed on 10 June 2024.
+    \bibitem{OECD_STR_2024}
+    OECD. (2024). Short-term interest rates (indicator). doi: 10.1787/2cc37d77-en. Accessed on 10 June 2024.
+    \bibitem{OECD_GDP_2024}
+    OECD. (2024). Quarterly GDP (indicator). doi: 10.1787/b86d1fc8-en. Accessed on 17 June 2024.
+\end{thebibliography}
+
+
+\end{document}
